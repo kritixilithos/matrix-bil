@@ -3,7 +3,6 @@
 }
 
 main {
-	print matrix
 	a = new matrix.Matrix(5, 10)
 	a.shape([seq(1, 10)])
 	/* multiplication table from 1 to 10 */

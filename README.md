@@ -9,3 +9,7 @@ cd src/
 bilar compress matrix
 bilar install matrix.<version>.bil.tar.xz
 ```
+
+## Usage
+
+See /tests/ for the usage of this bil.
