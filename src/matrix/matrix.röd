@@ -1,0 +1,75 @@
+record Matrix(rows, cols) {
+	rows : integer = rows
+	cols : integer = cols
+	/* initialises with a zero matrix */
+	matrix : list = [seq(1, rows) | for r do
+		temp = []
+		seq(1, cols) | for c do
+			temp += 0
+		done
+		[temp]
+	done]
+
+	/* void shape(vals:list) */
+	function shape vals {
+		vals = enlist(vals)
+		seq 0, rows*cols-1 | for i do
+			self.matrix[i//cols][i%cols] = vals[i%#vals]
+		done
+	}
+
+	/* Matrix transpose() */
+	function transpose {
+		temp = new Matrix(cols, rows)
+		seq 0, cols-1 | for c do
+			seq 0, rows-1 | for r do
+				temp.matrix[c][r]=self.matrix[r][c]
+			done
+		done
+
+		return temp
+	}
+
+	/* Matrix vectorise(func:Function, mat:Matrix) */
+	function vectorise func, mat {
+		error("Dimension error") unless[self.rows = mat.rows and self.cols = mat.cols]
+
+		res = new Matrix(self.rows, self.cols)
+		seq 0, self.rows-1 | for r do
+			seq 0, self.cols-1 | for c do
+				res.matrix[r][c] = func(self.matrix[r][c], mat.matrix[r][c])
+			done
+		done
+
+		return res
+	}
+
+	/* Matrix mult(mat:Matrix) */
+	function mult mat {
+		error("Dimension error") unless[self.cols = mat.rows]
+
+		res = new Matrix(self.rows, mat.cols)
+		seq 0, self.rows-1 | for r do
+			seq 0, mat.cols-1 | for c do
+				res.matrix[r][c] = (seq(0, self.cols-1) | [self.matrix[r][_] * mat.matrix[_1][c]] | sum)
+			done
+		done
+
+		return res
+	}
+}
+
+/* list enlist(nested_arr:list) */
+function enlist nested_arr {
+	res=[]
+	if[nested_arr is integer] do
+		res += nested_arr
+	else
+		nested_arr() | res .= enlist(_)
+	done
+	return res
+}
+
+post_load: {
+	exportType("Matrix")
+}
