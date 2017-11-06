@@ -3,7 +3,7 @@
 }
 
 main {
-	a = new matrix.Matrix(5, 10)
+	a = new matrix.Matrix(10, 10)
 	a.shape([seq(1, 10)])
 	/* multiplication table from 1 to 10 */
 	print a.vectorise({|a,b|return a*b}, a.transpose()).matrix
