@@ -1,6 +1,6 @@
 # Matrix.bil
 
-This is a bil for the [Röda programming language](). [Bilar]() is required for the installation of this bil.
+This is a bil for the [Röda programming language](https://github.com/fergusq/roda). [Bilar](https://github.com/fergusq/bilar) is required for the installation of this bil.
 
 ## Installation
 
@@ -12,4 +12,4 @@ bilar install matrix.<version>.bil.tar.xz
 
 ## Usage
 
-See /tests/ for the usage of this bil.
+See [`/test/`](https://github.com/kritixilithos/matrix.bil/tree/master/test) for the usage of this bil.

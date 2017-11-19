@@ -10,11 +10,13 @@ record Matrix(rows, cols) {
 		[temp]
 	done]
 
+	/* BEGIN matrix operations */
+
 	/* void shape(vals:list) */
-	function shape vals {
+	function shape(vals:list) {
 		vals := enlist(vals)
 		seq 0, rows*cols-1 | for i do
-			self.matrix[i//cols][i%cols] = vals[i%#vals]
+			self.set(i//cols, i%cols, vals[i%#vals])
 		done
 	}
 
@@ -23,51 +25,186 @@ record Matrix(rows, cols) {
 		res := new Matrix(cols, rows)
 		seq 0, cols-1 | for c do
 			seq 0, rows-1 | for r do
-				res.matrix[c][r]=self.matrix[r][c]
+				res.set(c, r, self.get(r, c))
 			done
 		done
 
 		return res
 	}
 
-	/* Matrix vectorise(func:Function, mat:Matrix) */
-	function vectorise func, mat {
-		error("Dimension error") unless[self.rows = mat.rows and self.cols = mat.cols]
+	/* Matrix submatrix(start:list<<integer>>, end:list<<integer>>) */
+	function submatrix(start:list, end:list) {
+		x1 := start[0]
+		x2 := end[0]
+		y1 := start[1]
+		y2 := end[1]
+
+		/* 0-indexed */
+		unless[x1>0, x1<self.cols, x2>0, x2<self.cols, y1>0, y1<self.rows, y2>0, y2<self.rows] do
+			error("Index error")
+		done
+
+		res := new Matrix(x2-x1+1, y2-y1+1)
+
+		seq y1, y2 | for r do
+			seq x1, x2 | for c do
+				res.set(r-y1, c-x1, self.get(r, c))
+			done
+		done
+
+		return res
+	}
+
+	/* Matrix flip(dir:integer=0) */
+	function flip(dir:integer=0) {
+		/* direction = 0 (horizontally), 1 (vertically) */
+		error("Domain error") unless[dir = 0 or dir = 1]
+
+		res := new Matrix(self.rows, self.cols)
+
+		seq 0, self.rows-1 | for r do
+			seq 0, self.cols-1 | for c do
+				if[dir = 0] do
+					res.set(r, c, self.get(r, self.cols-c-1))
+				else
+					res.set(r, c, self.get(self.rows-r-1, c))
+				done
+			done
+		done
+
+		return res
+	}
+
+	/* list<<floating>> reduceBy(func:function, dir:integer) */
+	/* floating func(val1:floating, val2:floating) */
+	function reduceBy(func:function, dir:integer=0) {
+		/* direction = 0 (horizontally), 1 (vertically) */
+		error("Domain error") unless[dir = 0 or dir = 1]
+
+		/* TODO */
+		if[dir = 0] do
+			res := [
+				for r in [seq(0, self.rows-1)] do
+					[self.getRow(r)() | reduce func(_, _)]
+				done
+			]
+
+			return res
+		else
+			res := [
+				for c in [seq(0, self.cols-1)] do
+					[self.getCol(c)() | reduce func(_, _)]
+				done
+			]
+
+			return res
+		done
+	}
+
+	/* Matrix foreach(func:function) */
+	/* integer func(x:integer, y:integer, val:floating) */
+	function foreach(func:function) {
+		res := new Matrix(self.rows, self.cols)
+
+		seq 0, self.rows-1 | for r do
+			seq 0, self.cols-1 | for c do
+				res.set(r, c, func(r, c, self.get(r, c)))
+			done
+		done
+
+		return res
+	}
+
+	/* Matrix vectorise(func:function, mat:Matrix) */
+	/* floating func(selfVal:floating, matVal:floating) */
+	function vectorise(func:function, mat:Matrix) {
+		error("Dimension error") unless[self.rows = mat.rows, self.cols = mat.cols]
 
 		res := new Matrix(self.rows, self.cols)
 		seq 0, self.rows-1 | for r do
 			seq 0, self.cols-1 | for c do
-				res.matrix[r][c] = func(self.matrix[r][c], mat.matrix[r][c])
+				res.set(r, c, func(self.get(r, c), mat.get(r, c)))
 			done
 		done
 
 		return res
 	}
 
+	/* END matrix operations */
+
+	/* BEGIN math functions */
+
 	/* Matrix mult(mat:Matrix) */
-	function mult mat {
+	function mult(mat:Matrix) {
 		error("Dimension error") unless[self.cols = mat.rows]
 
 		res := new Matrix(self.rows, mat.cols)
 		seq 0, self.rows-1 | for r do
 			seq 0, mat.cols-1 | for c do
-				res.matrix[r][c] = (seq(0, self.cols-1) | [self.matrix[r][_] * mat.matrix[_1][c]] | sum)
+				res.set(r, c, (seq(0, self.cols-1) | [self.get(r, _) * mat.get(_1, c)] | sum))
 			done
 		done
 
 		return res
 	}
+
+	/* END math functions */
+
+	/* BEGIN utility functions */
+
+	/* floating get(y:integer, x:integer) */
+	function get(y:integer, x:integer) {
+		error("Index error") unless[x >= 0, x < self.cols, y >= 0, y < self.rows]
+
+		return self.matrix[y][x]
+	}
+
+	/* list<<floating>> getRow(rowNumber:integer) */
+	function getRow(rowNumber:integer) {
+		error("Index error") unless[rowNumber >= 0, rowNumber < self.rows]
+
+		return self.matrix[rowNumber]
+	}
+
+	/* list<<floating>> getCol(colNumber:integer) */
+	function getCol(colNumber:integer) {
+		error("Index error") unless[colNumber >= 0, colNumber < self.cols]
+
+		column := []
+		seq 0, self.rows-1 | for r do
+			column += self.get(r, colNumber)
+		done
+
+		return column
+	}
+
+	/* void set(y:integer, x:integer, val:floating) */
+	function set(y:integer, x:integer, val) {
+		error("Index error") unless[x >= 0, x < self.cols, y >= 0, y < self.rows]
+
+		self.matrix[y][x] = val
+	}
+
+	/* END utility functions */
 }
 
 /* list enlist(nested_arr:list) */
+/* list enlist(nested_arr:floating) */
 function enlist nested_arr {
 	res:=[]
-	if[nested_arr is integer] do
+	if[isFloat(nested_arr)] do
 		res += nested_arr
 	else
+		error("Type error") unless[nested_arr is list]
+		/* assuming nested_arr is an array */
 		nested_arr() | res .= enlist(_)
 	done
 	return res
+}
+
+/* boolean isFloat(val) */
+function isFloat val {
+	return val is integer or val is floating
 }
 
 post_load: {

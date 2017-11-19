@@ -1,10 +1,18 @@
 {
-	matrix = require("matrix")
+	matlib = require("matrix")
 }
 
 main {
-	a = new matrix.Matrix(10, 10)
+	a = new matlib.Matrix(10, 10)
 	a.shape([seq(1, 10)])
+	print a.reduceBy({|x,y|return x+y})
 	/* multiplication table from 1 to 10 */
-	print a.vectorise({|a,b|return a*b}, a.transpose()).matrix
+	b = a.vectorise({|a,b|return a*b*2}, a.transpose())
+
+	identityMatrix = new matlib.Matrix(10, 10)
+	identityMatrix.shape([1]..[0]*10)
+
+	doubleIdentityMatrix = identityMatrix.foreach({|x, y, v|return 0.5*v})
+
+	print b.mult(doubleIdentityMatrix).submatrix([2,3], [7,8]).flip(dir=1).matrix
 }
