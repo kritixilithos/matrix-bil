@@ -13,3 +13,10 @@ bilar install matrix.<version>.bil.tar.xz
 ## Usage
 
 See [`/test/`](https://github.com/kritixilithos/matrix.bil/tree/master/test) for the usage of this bil.
+
+## Running tests
+
+```
+cd test
+time röda -D test.röd
+```

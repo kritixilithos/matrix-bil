@@ -1,14 +1,12 @@
 record Matrix(rows, cols) {
 	rows : integer = rows
 	cols : integer = cols
+	/* the matrix of the transpose is the same as the non-transpose
+	/* but the indexing is different to improve efficiency */
+	is_transpose:boolean = FALSE
 	/* initialises with a zero matrix */
-	matrix : list = [seq(1, rows) | for r do
-		temp := []
-		seq(1, cols) | for c do
-			temp += 0
-		done
-		[temp]
-	done]
+	/* stores matrix data as a 1D array */
+	matrix : list = [0]*self.rows*self.cols
 
 	/* BEGIN matrix operations */
 
@@ -16,19 +14,14 @@ record Matrix(rows, cols) {
 	function shape(vals:list) {
 		vals := enlist(vals)
 		seq 0, rows*cols-1 | for i do
-			self.set(i//cols, i%cols, vals[i%#vals])
+			self.matrix[i] = vals[i%#vals]
 		done
 	}
 
 	/* Matrix transpose() */
 	function transpose {
-		res := new Matrix(cols, rows)
-		seq 0, cols-1 | for c do
-			seq 0, rows-1 | for r do
-				res.set(c, r, self.get(r, c))
-			done
-		done
-
+		res := self.clone()
+		res.is_transpose = not self.is_transpose
 		return res
 	}
 
@@ -156,33 +149,52 @@ record Matrix(rows, cols) {
 	function get(y:integer, x:integer) {
 		error("Index error") unless[x >= 0, x < self.cols, y >= 0, y < self.rows]
 
-		return self.matrix[y][x]
+		if[self.is_transpose] do
+			return self.matrix[x*self.cols + y]
+		else
+			return self.matrix[y*self.cols + x]
+		done
 	}
 
 	/* list<<floating>> getRow(rowNumber:integer) */
 	function getRow(rowNumber:integer) {
 		error("Index error") unless[rowNumber >= 0, rowNumber < self.rows]
 
-		return self.matrix[rowNumber]
+		if[self.is_transpose] do
+			return self.matrix[rowNumber : self.rows*self.cols : self.cols]
+		else
+			return self.matrix[rowNumber*self.cols : rowNumber*self.cols+self.cols]
+		done
 	}
 
 	/* list<<floating>> getCol(colNumber:integer) */
 	function getCol(colNumber:integer) {
 		error("Index error") unless[colNumber >= 0, colNumber < self.cols]
 
-		column := []
-		seq 0, self.rows-1 | for r do
-			column += self.get(r, colNumber)
+		if[self.is_transpose] do
+			return self.matrix[colNumber*self.cols : colNumber*self.cols+self.cols]
+		else
+			return self.matrix[colNumber : self.rows*self.cols : self.cols]
 		done
-
-		return column
 	}
 
 	/* void set(y:integer, x:integer, val:floating) */
 	function set(y:integer, x:integer, val) {
 		error("Index error") unless[x >= 0, x < self.cols, y >= 0, y < self.rows]
 
-		self.matrix[y][x] = val
+		if[self.is_transpose] do
+			self.matrix[x*self.cols + y] = val
+		else
+			self.matrix[y*self.cols + x] = val
+		done
+	}
+
+	/* Matrix clone() */
+	function clone() {
+		res := new Matrix(self.rows, self.cols)
+		res.is_transpose = self.is_transpose
+		res.matrix = self.matrix[:]
+		return res
 	}
 
 	/* END utility functions */
